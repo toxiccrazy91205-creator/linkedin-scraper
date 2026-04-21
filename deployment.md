@@ -25,10 +25,11 @@ This avoids the costs of Load Balancers, ECS Clusters, and EFS network drives.
 
 ## 2. Connect and Prepare the Server
 
-Headless browsers crash instantly if a server runs out of RAM. A `t2.micro` only has 1 GB of RAM, which is cutting it incredibly close. 
+Headless browsers crash instantly if a server runs out of RAM. A `t2.micro` only has 1 GB of RAM, which is cutting it incredibly close.
 **We will fix this by creating 2GB of "Swap Space" (Fake RAM on the hard drive).**
 
 1. Connect to your instance via SSH using your terminal (if using powershell/cmd or terminal on Mac/Linux):
+
    ```bash
    ssh -i "scraper-key.pem" ubuntu@<YOUR_EC2_PUBLIC_IP>
    ```
@@ -47,6 +48,7 @@ Headless browsers crash instantly if a server runs out of RAM. A `t2.micro` only
 ## 3. Install Docker on the EC2
 
 Run these commands to install Docker natively:
+
 ```bash
 # Update server
 sudo apt-get update -y
@@ -57,7 +59,8 @@ sudo apt-get install docker.io -y
 # Allow your user to run Docker without typing "sudo" every time
 sudo usermod -aG docker ubuntu
 ```
-*(You must type `exit` to disconnect from the server, then SSH back in for the Docker permissions to apply).*
+
+_(You must type `exit` to disconnect from the server, then SSH back in for the Docker permissions to apply)._
 
 ---
 
@@ -66,26 +69,30 @@ sudo usermod -aG docker ubuntu
 Now that the server is bulletproof, pull your code and run the scraper.
 
 1. **Upload your code** to the EC2. (You can `git clone` your repository from GitHub once uploaded, or use a tool like WinSCP/FileZilla to copy your folder).
+
    ```bash
    git clone <YOUR_GITHUB_REPO_URL>
    cd linkedin-web
    ```
 
 2. **Create your `.env` file** on the server:
+
    ```bash
    cp .env.example .env
    # You can edit it using: nano .env
    ```
 
 3. **Build the Optimized Docker Container:**
+
    ```bash
    docker build -t scraper-app:latest .
    ```
-   *(This will take about 3-5 minutes depending on the AWS network).*
+
+   _(This will take about 3-5 minutes depending on the AWS network)._
 
 4. **Run the Server in the Background:**
    ```bash
-   docker run -d \
+   sudo docker run -d \
      --name linkedin-api \
      --restart unless-stopped \
      -p 5000:5000 \
@@ -99,6 +106,6 @@ Now that the server is bulletproof, pull your code and run the scraper.
 
 Your production server is fundamentally online forever!
 
-* **Test the API:** Open your web browser and go to: `http://<YOUR_EC2_PUBLIC_IP>:5000`
-* **Restarting?** Because of the `--restart unless-stopped` flag in our Docker command, if AWS reboots your server for underlying maintenance, Docker will automatically start your scraper API back up the second the server turns on. No manual startup required.
-* **View Live Logs:** If you ever want to see what Chromium is doing inside the server, simply SSH into the machine and run: `docker logs -f linkedin-api`
+- **Test the API:** Open your web browser and go to: `http://<YOUR_EC2_PUBLIC_IP>:5000`
+- **Restarting?** Because of the `--restart unless-stopped` flag in our Docker command, if AWS reboots your server for underlying maintenance, Docker will automatically start your scraper API back up the second the server turns on. No manual startup required.
+- **View Live Logs:** If you ever want to see what Chromium is doing inside the server, simply SSH into the machine and run: `docker logs -f linkedin-api`

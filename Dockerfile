@@ -39,7 +39,7 @@ EXPOSE 5000
 ENV PORT=5000
 ENV FLASK_DEBUG=false
 ENV MAX_RETRIES=3
-ENV SCRAPER_TIMEOUT=10
+ENV SCRAPER_TIMEOUT=30
 
 # Start via Gunicorn as a production-grade WSGI Server
 # Note: 1 worker process is ideal to restrict memory usage. 
