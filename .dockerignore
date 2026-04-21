@@ -1,0 +1,11 @@
+.git
+.sessions/
+__pycache__/
+venv/
+test_env/
+.env
+*.pyc
+Dockerfile
+.dockerignore
+README.md
+tests.py

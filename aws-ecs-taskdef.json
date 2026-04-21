@@ -1,0 +1,65 @@
+{
+    "family": "linkedin-scraper-task",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "1024",
+    "memory": "3072",
+    "executionRoleArn": "arn:aws:iam::<YOUR_ACCOUNT_ID>:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::<YOUR_ACCOUNT_ID>:role/LinkedInScraperAppRole",
+    "containerDefinitions": [
+        {
+            "name": "linkedin-scraper-container",
+            "image": "<YOUR_ACCOUNT_ID>.dkr.ecr.<YOUR_REGION>.amazonaws.com/linkedin-scraper:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp"
+                }
+            ],
+            "environment": [
+                { "name": "FLASK_DEBUG", "value": "false" },
+                { "name": "PORT", "value": "5000" },
+                { "name": "MAX_RETRIES", "value": "3" },
+                { "name": "SCRAPER_TIMEOUT", "value": "10" }
+            ],
+            "secrets": [
+                {
+                    "name": "FLASK_SECRET_KEY",
+                    "valueFrom": "arn:aws:ssm:<YOUR_REGION>:<YOUR_ACCOUNT_ID>:parameter/LinkedinScraper/FLASK_SECRET_KEY"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "SessionStorage",
+                    "containerPath": "/app/.sessions"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/linkedin-scraper",
+                    "awslogs-region": "<YOUR_REGION>",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "healthCheck": {
+                "command": ["CMD-SHELL", "curl -f http://localhost:5000/api/status || exit 1"],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+            }
+        }
+    ],
+    "volumes": [
+        {
+            "name": "SessionStorage",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "<YOUR_EFS_ID>",
+                "transitEncryption": "ENABLED"
+            }
+        }
+    ]
+}
