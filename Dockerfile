@@ -10,13 +10,10 @@ WORKDIR /app
 # Install application dependencies FIRST for layer caching efficiency
 COPY requirements.txt .
 
-# Install pip requirements, Playwright Chromium, and system Chromium dependencies
-# Done in a single RUN block, cleaning apt caches to minimize total image size
+# Install system dependencies (as root)
 RUN pip install --no-cache-dir -r requirements.txt && \
-    playwright install chromium && \
     playwright install-deps chromium && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /root/.cache
+    rm -rf /var/lib/apt/lists/*
 
 # Copy application source code
 COPY . .
@@ -26,7 +23,16 @@ COPY . .
 RUN adduser --disabled-password --gecos "" scraperuser && \
     chown -R scraperuser:scraperuser /app
 
+# Configure Playwright to use a global browser path
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH && \
+    chown -R scraperuser:scraperuser $PLAYWRIGHT_BROWSERS_PATH
+
 USER scraperuser
+
+# Install Playwright browsers (as scraperuser)
+RUN playwright install chromium
+
 
 # Configuration mappings
 EXPOSE 5000
